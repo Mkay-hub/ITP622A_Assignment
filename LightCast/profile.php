@@ -15,7 +15,7 @@ check_login();
     <h1>Your Profile, <?php echo htmlspecialchars($_SESSION['user']['username']); ?>!</h1>
     <p>Profile details here.</p>
     <a href="dashboard.php">Back to Dashboard</a>
-    <a href="<?php logout(); ?>">Logout</a>
+<!--<a href="<?php logout(); ?>">Logout</a>-->
 </body>
 
 </html>
