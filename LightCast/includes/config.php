@@ -1,11 +1,11 @@
 <?php
 
 // Database configuration
-$host= 'localhost'; 
-$db = 'lightcast';
+$host = 'localhost';
+$db = 'socialdb';
 $user = 'root';
 $pass = '';
-$charset = 'utf8mb4'; 
+$charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [
