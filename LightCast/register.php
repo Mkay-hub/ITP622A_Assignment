@@ -1,6 +1,7 @@
 <?php
+/*
 include 'includes/config.php';
-
+*/
 $errors = [];
 $success = '';
 
@@ -181,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     <p> Already a member?
-        <a href="login.php">Sign_in</a>
+        <!-- <a href="login.php">Sign_in</a>  --> Sign in here!
     </p>
 
     <h1> Hello, Welcome to LightCast </h1>

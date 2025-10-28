@@ -1,8 +1,9 @@
 <?php
+/*
 session_start();
 session_regenerate_id(true);
 require_once 'includes/config.php';
-
+*/ 
 
 $errors = [];
 $username = '';
@@ -72,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </main>
 
-    <p> Don't have an account? <a href="register.php"> Register here </a> </p>
+    <p> Don't have an account? <!-- <a href="register.php">  Register here </a> --> </p>
 
     <h2> Hello and Welcome to LightCast! </h2>
 </body>
