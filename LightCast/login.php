@@ -1,9 +1,5 @@
 <?php
-/*
-session_start();
-session_regenerate_id(true);
 require_once 'includes/config.php';
-*/ 
 
 $errors = [];
 $username = '';
@@ -27,9 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
-            // Prevent session fixation
-            session_regenerate_id(true);
-            $_SESSION['user'] = ['id' => $user['id'], 'username' => $user['username']];
+            // Redirect to dashboard without setting session
             header('Location: dashboard.php');
             exit;
         } else {
@@ -62,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="#">
-            
+
             <label for="username">Username</label>
             <input id="username" name="username" type="text" value="<?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="username">
 
