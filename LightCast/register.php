@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div style="color: green;"><?php echo htmlspecialchars($success); ?></div>
     <?php endif; ?>
 
-    <form action="" method="POST" enctype="multipart/form-data" id="registrationForm">
+    <form action="#" method="POST" enctype="multipart/form-data" id="registrationForm">
         <label for="username"> Username: </label>
         <input type="text" id="username" name="username" required> <br>
 
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     <p> Already a member?
-        <a href="#">Sign_in</a>
+        <a href="login.php">Sign_in</a>
     </p>
 
     <h1> Hello, Welcome to LightCast </h1>
