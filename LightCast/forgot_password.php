@@ -1,12 +1,16 @@
 <?php
+// Include database configuration
 require_once 'includes/config.php';
+
 $errors = [];
 $success = '';
 $show_reset_form = false;
 $user_id = null;
 
+// Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['email'])) {
+        // Handle email submission for password reset
         $email = trim($_POST['email'] ?? '');
 
         if (empty($email)) {
@@ -16,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($errors)) {
+            // Check if email exists in database
             $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
             $stmt->execute([$email]);
             $user = $stmt->fetch();
@@ -27,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif (isset($_POST['new_password'])) {
+        // Handle new password submission
         $new_password = $_POST['new_password'] ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
         $user_id = $_POST['user_id'] ?? '';
@@ -42,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($errors) && $user_id) {
+            // Hash new password and update in database
             $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
             if ($stmt->execute([$password_hash, $user_id])) {
@@ -67,46 +74,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-    <header>
-        <h1>Forgot Password</h1>
-    </header>
-
-    <?php if (!empty($errors)): ?>
-        <div style="color: red;">
+    <div class="hamburger-menu">
+        <button class="hamburger-btn">&#9776;</button>
+        <div class="menu">
             <ul>
-                <?php foreach ($errors as $error): ?>
-                    <li><?php echo htmlspecialchars($error); ?></li>
-                <?php endforeach; ?>
+                <li><a href="login.php">Login</a></li>
+                <li><a href="register.php">Register</a></li>
             </ul>
         </div>
-    <?php endif; ?>
+    </div>
 
-    <?php if ($success): ?>
-        <div style="color: green;"><?php echo htmlspecialchars($success); ?></div>
-    <?php endif; ?>
+    <div class="forgot-container">
+        <h1>Forgot Password</h1>
 
-    <?php if (!$show_reset_form && !$success): ?>
-        <form action="#" method="POST">
-            <label for="email">Enter your email address:</label>
-            <input type="email" id="email" name="email" required>
-            <button type="submit">Submit</button>
-        </form>
-    <?php elseif ($show_reset_form): ?>
-        <form action="#" method="POST">
-            <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($user_id); ?>">
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" required>
-            <label for="confirm_password">Confirm New Password:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-            <button type="submit">Reset Password</button>
-        </form>
-    <?php endif; ?>
+        <?php if (!empty($errors)): ?>
+            <div class="errors">
+                <ul style="margin:0; padding:0 0 0 18px;">
+                    <?php foreach ($errors as $error): ?>
+                        <li><?php echo htmlspecialchars($error); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
 
-    <p><a href="login.php">Back to Login</a></p>
+        <?php if ($success): ?>
+            <div style="color: green;"><?php echo htmlspecialchars($success); ?></div>
+        <?php endif; ?>
 
-    <footer>
-        T's & C's LightCast corporate
-    </footer>
+        <?php if (!$show_reset_form && !$success): ?>
+            <form action="#" method="POST">
+                <label for="email">Enter your email address:</label>
+                <input type="email" id="email" name="email" required>
+                <button type="submit">Submit</button>
+            </form>
+        <?php elseif ($show_reset_form): ?>
+            <form action="#" method="POST">
+                <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($user_id); ?>">
+                <label for="new_password">New Password:</label>
+                <input type="password" id="new_password" name="new_password" required>
+                <label for="confirm_password">Confirm New Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+                <button type="submit">Reset Password</button>
+            </form>
+        <?php endif; ?>
+
+        <p><a href="login.php">Back to Login</a></p>
+    </div>
+
+    <script src="JS/main.js"></script>
 </body>
 
 </html>

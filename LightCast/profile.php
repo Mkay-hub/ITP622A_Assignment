@@ -1,20 +1,29 @@
 <?php
+// Include configuration and authentication
 require_once 'includes/config.php';
 require_once 'includes/auth.php';
 
+// Check if user is logged in
 check_login();
 
+// Get user ID from session
 $user_id = $_SESSION['user']['id'];
 
-// Handle profile update
+// Handle profile update submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
+    $updates = [];
 
+    // Prepare username update if provided
+    $username = trim($_POST['username'] ?? '');
     if (!empty($username)) {
-        $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
-        $stmt->execute([$username, $user_id]);
+        $updates[] = "username = ?";
     }
 
+    // Always update bio
+    $bio = trim($_POST['bio'] ?? '');
+    $updates[] = "bio = ?";
+
+    // Handle profile picture upload
     $profile_pic = $_FILES['profile_pic'] ?? null;
     if ($profile_pic && $profile_pic['error'] === UPLOAD_ERR_OK) {
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
@@ -27,17 +36,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $file_name = uniqid('profile_', true) . '.' . $file_ext;
             $file_path = $upload_dir . $file_name;
             if (move_uploaded_file($profile_pic['tmp_name'], $file_path)) {
-                $stmt = $pdo->prepare("UPDATE users SET profile_pic = ? WHERE id = ?");
-                $stmt->execute([$file_path, $user_id]);
+                $updates[] = "profile_pic = ?";
             }
         }
     }
 
+    // Execute update if there are changes
+    if (!empty($updates)) {
+        $set_clause = implode(', ', $updates);
+        $params = [];
+        if (!empty($username)) $params[] = $username;
+        $params[] = $bio;
+        if ($profile_pic && isset($file_path)) $params[] = $file_path;
+        $params[] = $user_id;
+
+        $stmt = $pdo->prepare("UPDATE users SET $set_clause WHERE id = ?");
+        $stmt->execute($params);
+    }
+
+    // Redirect to profile page
     header("Location: profile.php");
     exit;
 }
 
-// Fetch user data
+// Fetch current user data
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
@@ -46,7 +68,7 @@ if (!$user) {
     die("User not found.");
 }
 
-// Fetch posts
+// Fetch user's posts
 $stmt = $pdo->prepare("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$user_id]);
 $posts = $stmt->fetchAll();
@@ -63,105 +85,87 @@ $posts = $stmt->fetchAll();
 </head>
 
 <body>
-    <h1>Your Profile, <?php echo htmlspecialchars($user['username']); ?>!</h1>
-    <!-- Icon -->
-
-
-    <nav>
-        <a href="dashboard.php">Back to Dashboard</a>
-        <a href="login.php?logout=1">Logout</a>
-    </nav>
-
-    <?php if ($user['profile_pic']): ?>
-        <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Picture" width="150" height="150">
-    <?php else: ?>
-        <img src="#" alt="Profile Picture" width="150" height="150"> <!-- Need to add a empty profile pic icon incase there is'nt a profile pic. -->
-    <?php endif; ?>
-    <h2> Username: <?php echo htmlspecialchars($user['username']); ?> </h2>
-    <strong><a href="#" onclick="document.getElementById('popup').style.display='flex'"> Update profile info </a></strong>
-
-
-    <!-- Overlapping Section -->
-    <div class="overlay" id="popup">
-        <div class="modal">
-            <h3><u> Update Profile </u></h3>
-            <form method="post" action="profile.php" enctype="multipart/form-data">
-
-
-                <label for="username">
-                    Profile username:
-                </label>
-                <input type="text" name="username" id="username" value="<?php echo htmlspecialchars($user['username']); ?>">
-                <br>
-                <br>
-
-                <label for="profile_pic">
-                    Profile picture:
-                </label>
-                <input type="file" name="profile_pic" id="profile_pic" accept="image/*">
-                <br>
-                <br>
-
-                <button type="submit" class="btnConfirm" onclick="document.getElementById('popup').style.display='none'">
-                    Proceed
-                </button>
-
-            </form>
+    <div class="hamburger-menu">
+        <button class="hamburger-btn">&#9776;</button>
+        <div class="menu">
+            <ul>
+                <li><a href="dashboard.php">Dashboard</a></li>
+                <li><a href="profile.php">Profile</a></li>
+                <li><a href="messages.php">Messages</a></li>
+                <li><a href="login.php?logout=1">Logout</a></li>
+            </ul>
         </div>
     </div>
 
-    <hr>
+    <main class="profile-main">
+        <div class="profile-header">
+            <h1>Welcome to Your Profile, <?php echo htmlspecialchars($user['username']); ?>!</h1>
+            <nav class="profile-nav">
+                <a href="dashboard.php">Back to Dashboard</a>
+                <a href="login.php?logout=1">Logout</a>
+            </nav>
+        </div>
 
-    <table>
-        <tr>
-            <th> Following List: </th>
-            <th> Followers List: </th>
-        </tr>
+        <div class="profile-info">
+            <div class="profile-pic-section">
+                <?php if ($user['profile_pic']): ?>
+                    <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Picture" class="profile-pic">
+                <?php else: ?>
+                    <div class="profile-pic-placeholder">No Image</div>
+                <?php endif; ?>
+            </div>
+            <div class="profile-details">
+                <h2><?php echo htmlspecialchars($user['username']); ?></h2>
+                <p>Email: <?php echo htmlspecialchars($user['email']); ?></p>
+                <?php if (!empty($user['bio'])): ?>
+                    <p>Bio: <?php echo htmlspecialchars($user['bio']); ?></p>
+                <?php endif; ?>
+                <button class="update-btn" onclick="document.getElementById('popup').style.display='flex'">Update Profile</button>
+            </div>
+        </div>
 
-        <tr>
-            <td>
-                <li><a href="#"> User 1 </a></li>
-                <li><a href="#"> User 2 </a></li>
-                <li><a href="#"> User 3 </a></li>
-            </td>
+        <!-- Overlapping Section -->
+        <div class="overlay" id="popup">
+            <div class="modal">
+                <h3>Update Profile</h3>
+                <form method="post" action="profile.php" enctype="multipart/form-data">
+                    <label for="username">Username:</label>
+                    <input type="text" name="username" id="username" value="<?php echo htmlspecialchars($user['username']); ?>">
 
-            <td>
-                <li><a href="#"> User A </a></li>
-                <li><a href="#"> User B </a></li>
-                <li><a href="#"> User C </a></li>
-            </td>
-        </tr>
-    </table>
+                    <label for="bio">Bio:</label>
+                    <textarea name="bio" id="bio" rows="3"><?php echo htmlspecialchars($user['bio'] ?? ''); ?></textarea>
 
-    <hr>
+                    <label for="profile_pic">Profile Picture:</label>
+                    <input type="file" name="profile_pic" id="profile_pic" accept="image/*">
 
-    <h4> Posts: </h4>
+                    <div class="form-buttons">
+                        <button type="submit" class="btnConfirm">Update</button>
+                        <button type="button" class="btnCancel" onclick="document.getElementById('popup').style.display='none'">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-    <table border="1">
-        <?php if (count($posts) > 0): ?>
-            <?php foreach (array_chunk($posts, 2) as $row): ?>
-                <tr>
-                    <?php foreach ($row as $post): ?>
-                        <td>
+        <div class="posts-section">
+            <h3>Your Posts</h3>
+            <?php if (count($posts) > 0): ?>
+                <div class="posts-grid">
+                    <?php foreach ($posts as $post): ?>
+                        <div class="post-card">
                             <?php if ($user['profile_pic']): ?>
-                                <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Picture" width="50" height="50"> <br>
+                                <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Picture" class="post-pic">
                             <?php endif; ?>
-                            content: <p><?php echo htmlspecialchars($post['content']); ?></p>
-                            Timestamp: <?php echo htmlspecialchars($post['created_at']); ?>
-                        </td>
+                            <p><?php echo htmlspecialchars($post['content']); ?></p>
+                            <small><?php echo htmlspecialchars($post['created_at']); ?></small>
+                        </div>
                     <?php endforeach; ?>
-                    <?php if (count($row) == 1): ?>
-                        <td></td>
-                    <?php endif; ?>
-                </tr>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <tr>
-                <td colspan="2">No posts yet.</td>
-            </tr>
-        <?php endif; ?>
-    </table>
+                </div>
+            <?php else: ?>
+                <p>No posts yet.</p>
+            <?php endif; ?>
+        </div>
 
+        <script src="JS/main.js"></script>
 </body>
 
 </html>
