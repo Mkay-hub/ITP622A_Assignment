@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="CSS/styles.css">
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('registrationForm');
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     <p> Already a member?
-        <!-- <a href="login.php">Sign_in</a>  --> Sign in here!
+        <a href="login.php">Sign in here!</a>
     </p>
 
     <h1> Hello, Welcome to LightCast </h1>

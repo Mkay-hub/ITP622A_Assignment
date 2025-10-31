@@ -1,6 +1,13 @@
 <?php
 require_once 'includes/config.php';
 
+if (isset($_GET['logout'])) {
+    require_once 'includes/auth.php';
+    logout();
+    header('Location: login.php');
+    exit;
+}
+
 $errors = [];
 $username = '';
 
@@ -23,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password_hash'])) {
-            // Redirect to dashboard without setting session
+            session_start();
+            $_SESSION['user'] = ['id' => $user['id'], 'username' => $user['username']];
             header('Location: dashboard.php');
             exit;
         } else {
@@ -67,7 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </main>
 
-    <p> Don't have an account? <!-- <a href="register.php">  Register here </a> --> </p>
+    <p> Don't have an account? <a href="register.php">Register here</a> </p>
+    <p> Forgot your password? <a href="forgot_password.php">Reset it here</a> </p>
 
     <h2> Hello and Welcome to LightCast! </h2>
 </body>

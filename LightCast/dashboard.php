@@ -1,18 +1,11 @@
 <?php
-require_once 'includes/auth.php';
-// check_login(); // Commented out for testing
 require_once 'includes/config.php';
+require_once 'includes/auth.php';
 
-// Dummy session for testing
-if (!isset($_SESSION['user'])) {
-    $_SESSION['user'] = ['id' => 1, 'username' => 'testuser'];
-}
+check_login();
 
-if (isset($_GET['logout'])) {
-    logout();
-    header('Location: login.php');
-    exit;
-}
+$user_id = $_SESSION['user']['id'];
+$username = $_SESSION['user']['username'];
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $content = trim($_POST['content']);
@@ -29,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $full_content .= "\n" . $image_path;
         }
         $stmt = $pdo->prepare("INSERT INTO posts (user_id, content) VALUES (?, ?)");
-        $stmt->execute([$_SESSION['user']['id'], $full_content]);
+        $stmt->execute([$user_id, $full_content]);
     }
 }
 ?>
@@ -43,10 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 
 <body>
-    <h1>Welcome to your Dashboard, <?php echo htmlspecialchars($_SESSION['user']['username']); ?>!</h1>
+    <h1>Welcome to your Dashboard, <?php echo htmlspecialchars($username); ?>!</h1>
     <p>You are logged in.</p>
     <a href="profile.php">View Profile</a>
-    <a href="?logout=1">Logout</a>
+    <a href="messages.php">Messages</a>
+    <a href="login.php?logout=1">Logout</a>
 
     <h2>Post an Update</h2>
     <form method="post" enctype="multipart/form-data">

@@ -1,18 +1,21 @@
 <?php
 require_once 'includes/config.php';
+require_once 'includes/auth.php';
 
-$user_id = 2; // Hardcoded for demonstration; in a real app, this would come from session or GET
+check_login();
+
+$user_id = $_SESSION['user']['id'];
 
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
-    $profile_pic = $_FILES['profile_pic'] ?? null;
 
     if (!empty($username)) {
         $stmt = $pdo->prepare("UPDATE users SET username = ? WHERE id = ?");
         $stmt->execute([$username, $user_id]);
     }
 
+    $profile_pic = $_FILES['profile_pic'] ?? null;
     if ($profile_pic && $profile_pic['error'] === UPLOAD_ERR_OK) {
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
         if (in_array($profile_pic['type'], $allowed_types) && $profile_pic['size'] <= 2 * 1024 * 1024) {
@@ -39,6 +42,10 @@ $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
+if (!$user) {
+    die("User not found.");
+}
+
 // Fetch posts
 $stmt = $pdo->prepare("SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC");
 $stmt->execute([$user_id]);
@@ -51,53 +58,80 @@ $posts = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
+    <title>User Profile</title>
+    <link rel="stylesheet" href="CSS/styles.css">
 </head>
 
 <body>
     <h1>Your Profile, <?php echo htmlspecialchars($user['username']); ?>!</h1>
-    <p>Profile details here.</p>
-
     <!-- Icon -->
 
 
     <nav>
-        <!-- <a href="dashboard.php">Back to Dashboard</a>  --> Back to Dashboard
-        <a href="<? /*php logout(); */ ?>">Logout</a>
+        <a href="dashboard.php">Back to Dashboard</a>
+        <a href="login.php?logout=1">Logout</a>
     </nav>
 
     <?php if ($user['profile_pic']): ?>
         <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Picture" width="150" height="150">
     <?php else: ?>
-        <img src="path_to_profile_picture.jpg" alt="Profile Picture" width="150" height="150">
+        <img src="#" alt="Profile Picture" width="150" height="150"> <!-- Need to add a empty profile pic icon incase there is'nt a profile pic. -->
     <?php endif; ?>
     <h2> Username: <?php echo htmlspecialchars($user['username']); ?> </h2>
-    <h3> Bio: </h3>
+    <strong><a href="#" onclick="document.getElementById('popup').style.display='flex'"> Update profile info </a></strong>
 
-    <h3> Update Profile </h3>
-     <form method="POST" enctype="multipart/form-data">
-        <label for="username">New Username:</label>
-        <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user['username']); ?>"><br>
-        <label for="profile_pic">New Profile Picture:</label>
-        <input type="file" id="profile_pic" name="profile_pic" accept="image/*"><br>
-        <button type="submit">Update Profile</button>
-    </form>
+
+    <!-- Overlapping Section -->
+    <div class="overlay" id="popup">
+        <div class="modal">
+            <h3><u> Update Profile </u></h3>
+            <form method="post" action="profile.php" enctype="multipart/form-data">
+
+
+                <label for="username">
+                    Profile username:
+                </label>
+                <input type="text" name="username" id="username" value="<?php echo htmlspecialchars($user['username']); ?>">
+                <br>
+                <br>
+
+                <label for="profile_pic">
+                    Profile picture:
+                </label>
+                <input type="file" name="profile_pic" id="profile_pic" accept="image/*">
+                <br>
+                <br>
+
+                <button type="submit" class="btnConfirm" onclick="document.getElementById('popup').style.display='none'">
+                    Proceed
+                </button>
+
+            </form>
+        </div>
+    </div>
 
     <hr>
 
-    <h4> Following List: </h4>
-    <ul>
-        <li><a href="£"> User 1 </a></li>
-        <li><a href="£"> User 2 </a></li>
-        <li><a href="£"> User 2 </a></li>
-    </ul>
+    <table>
+        <tr>
+            <th> Following List: </th>
+            <th> Followers List: </th>
+        </tr>
 
-    <h4> Followers List: </h4>
-    <ul>
-        <li><a href="£"> User A </a></li>
-        <li><a href="£"> User B </a></li>
-        <li><a href="£"> User C </a></li>
-    </ul>
+        <tr>
+            <td>
+                <li><a href="#"> User 1 </a></li>
+                <li><a href="#"> User 2 </a></li>
+                <li><a href="#"> User 3 </a></li>
+            </td>
+
+            <td>
+                <li><a href="#"> User A </a></li>
+                <li><a href="#"> User B </a></li>
+                <li><a href="#"> User C </a></li>
+            </td>
+        </tr>
+    </table>
 
     <hr>
 
@@ -127,9 +161,6 @@ $posts = $stmt->fetchAll();
             </tr>
         <?php endif; ?>
     </table>
-
-
-
 
 </body>
 
